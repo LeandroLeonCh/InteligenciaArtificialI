@@ -1,0 +1,66 @@
+CREATE (a:restaurant{name:'Casa'}),
+(b:restaurant{name:'Exq. by Blanca'}),
+(c:restaurant{name:'Rincón del Tino'}),
+(d:restaurant{name:'Encebollado del río'}),
+(e:restaurant{name:'Pincatería Balzay'}),
+(f:restaurant{name:'Palacio del cuy'}),
+(g:restaurant{name:'Los asados de antaño'}),
+(h:restaurant{name:'HUMO'}),
+(i:restaurant{name:'New York pizza'}),
+(j:restaurant{name:'Pollos de la remigio'}),
+(k:restaurant{name:'Mi oya'}),
+(l:restaurant{name:'AKUNA FOODS'}),
+(m:restaurant{name:'Hria & Psria El tradicional'}),
+(n:restaurant{name:'La carroza pizza'}),
+(o:restaurant{name:'pizza Colombia'}),
+(p:restaurant{name:'La Vitrola'}),
+(q:restaurant{name:'ESPRESO'}),
+(r:restaurant{name:'Luma Café'}),
+(s:restaurant{name:'Olla de barro'}),
+
+(a)-[:ROAD {cost: 0.2}]->(b),
+(a)-[:ROAD {cost: 0.2}]->(c),
+(a)-[:ROAD {cost: 0.3}]->(d),
+(a)-[:ROAD {cost: 0.5}]->(e),
+(b)-[:ROAD {cost: 0.7}]->(f), 
+(c)-[:ROAD {cost: 0.4}]->(g),
+(g)-[:ROAD {cost: 0.1}]->(h),
+(h)-[:ROAD {cost: 0.5}]->(i),
+(h)-[:ROAD {cost: 0.6}]->(j),
+(j)-[:ROAD {cost: 1.6}]->(k),
+(g)-[:ROAD {cost: 0.2}]->(n),
+(n)-[:ROAD {cost: 0.2}]->(m),
+(m)-[:ROAD {cost: 0.3}]->(l),
+(l)-[:ROAD {cost: 0.6}]->(k),
+(d)-[:ROAD {cost: 0.3}]->(o),        
+(o)-[:ROAD {cost: 0.7}]->(n),
+(o)-[:ROAD {cost: 0.7}]->(p),
+(p)-[:ROAD {cost: 0.2}]->(q),
+(e)-[:ROAD {cost: 1.1}]->(r),
+(r)-[:ROAD {cost: 0.3}]->(s)
+
+
+MATCH (start:restaurant {name: 'Casa'}), (end:restaurant {name: 'Mi oya'}) 
+CALL gds.alpha.shortestPath.write({ 
+  nodeQuery:'MATCH(n:restaurant) WHERE NOT n.name = "c" RETURN id(n) AS id', 
+  relationshipQuery:'MATCH(n:restaurant)-[r:ROAD]->(m:restaurant) RETURN id(n) AS source, id(m) AS target, r.cost AS weight', 
+  startNode: start, 
+  endNode: end, 
+  relationshipWeightProperty: 'weight', 
+  writeProperty: 'sssp' 
+}) 
+YIELD nodeCount, totalCost 
+RETURN nodeCount,totalCost 
+
+
+
+MATCH (start:restaurant {name: 'Casa'}), (end:restaurant {name: 'Mi oya'}) 
+CALL gds.alpha.shortestPath.stream({ 
+  nodeQuery:'MATCH(n:restaurant)  RETURN id(n) AS id', 
+  relationshipQuery:'MATCH(n:restaurant)-[r:ROAD]->(m:restaurant) RETURN id(n) AS source, id(m) AS target, r.cost as weight', 
+  startNode: start, 
+  relationshipWeightProperty: 'weight', 
+  endNode: end 
+}) 
+YIELD nodeId, cost 
+RETURN gds.util.asNode(nodeId).name As name, cost 
